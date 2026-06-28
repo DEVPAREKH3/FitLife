@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="fitlife">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="FitLife – Your personal fitness tracker and diet planner. Log workouts, track nutrition, monitor BMI." />
+  <title>FitLife – Fitness Tracker & Diet Planner</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/style.css?v=1.1.0" />
+
+  <!-- AngularJS -->
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.3/angular.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.3/angular-route.min.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- html2pdf.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+
+<body ng-controller="AppCtrl">
+
+  <div id="app">
+
+    <!-- ══════════════════════════════════════════════
+         SIDEBAR (hidden on auth pages)
+    ══════════════════════════════════════════════ -->
+    <nav class="sidebar" ng-class="{ open: sidebarOpen }" ng-show="isLoggedIn">
+
+      <!-- Brand -->
+      <div class="sidebar-brand">
+        <div class="brand-row">
+          <div class="brand-icon">🏋️</div>
+          <span class="brand-name">FitLife</span>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="sidebar-nav">
+        <div class="nav-section-label">Main Menu</div>
+
+        <div class="nav-item">
+          <a href="#!/dashboard" class="nav-link" ng-class="{ active: isActive('/dashboard') }" ng-click="closeSidebar()">
+            <span class="nav-icon">📊</span> Dashboard
+          </a>
+        </div>
+        <div class="nav-item">
+          <a href="#!/workouts" class="nav-link" ng-class="{ active: isActive('/workouts') }" ng-click="closeSidebar()">
+            <span class="nav-icon">💪</span> Workouts
+          </a>
+        </div>
+        <div class="nav-item">
+          <a href="#!/diet" class="nav-link" ng-class="{ active: isActive('/diet') }" ng-click="closeSidebar()">
+            <span class="nav-icon">🥗</span> Diet & Nutrition
+          </a>
+        </div>
+        <div class="nav-item">
+          <a href="#!/bmi" class="nav-link" ng-class="{ active: isActive('/bmi') }" ng-click="closeSidebar()">
+            <span class="nav-icon">⚖️</span> BMI Tracker
+          </a>
+        </div>
+
+        <div class="nav-section-label" style="margin-top:12px">Account</div>
+
+        <div class="nav-item">
+          <a href="#!/profile" class="nav-link" ng-class="{ active: isActive('/profile') }" ng-click="closeSidebar()">
+            <span class="nav-icon">👤</span> Profile
+          </a>
+        </div>
+      </div>
+
+      <!-- User + Logout -->
+      <div class="sidebar-footer">
+        <div class="user-pill">
+          <div class="user-avatar">{{ getInitials(currentUser.name) }}</div>
+          <div>
+            <div class="user-name-text">{{ currentUser.name || 'User' }}</div>
+            <div class="user-email-text">{{ currentUser.email }}</div>
+          </div>
+        </div>
+        <button class="logout-btn" ng-click="logout()">
+          <span>🚪</span> Logout
+        </button>
+      </div>
+    </nav>
+
+    <!-- Mobile overlay -->
+    <div class="sidebar-overlay" ng-class="{ active: sidebarOpen }" ng-click="closeSidebar()"></div>
+
+    <!-- Mobile menu toggle -->
+    <button class="mob-toggle" ng-show="isLoggedIn" ng-click="toggleSidebar()" aria-label="Toggle menu">
+      ☰
+    </button>
+
+    <!-- ══════════════════════════════════════════════
+         MAIN CONTENT AREA
+    ══════════════════════════════════════════════ -->
+    <main class="main-content" ng-class="{ 'no-sidebar': !isLoggedIn }">
+      <div ng-view class="fade-up"></div>
+    </main>
+
+  </div>
+
+  <!-- App Scripts -->
+  <script src="js/app.js?v=1.1.0"></script>
+  <script src="js/services/apiService.js?v=1.1.0"></script>
+  <script src="js/controllers/authCtrl.js?v=1.1.0"></script>
+  <script src="js/controllers/dashboardCtrl.js?v=1.1.0"></script>
+  <script src="js/controllers/workoutCtrl.js?v=1.1.0"></script>
+  <script src="js/controllers/dietCtrl.js?v=1.1.0"></script>
+  <script src="js/controllers/bmiCtrl.js?v=1.1.0"></script>
+  <script src="js/controllers/profileCtrl.js?v=1.1.0"></script>
+
+</body>
+</html>

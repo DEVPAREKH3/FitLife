@@ -1,0 +1,102 @@
+<!-- LOGIN VIEW — Professional Navy + White -->
+<div class="auth-bg auth-bg-pro">
+
+  <!-- Left decorative panel (visible on desktop) -->
+  <div class="auth-left-panel">
+    <div class="auth-panel-inner">
+      <div class="auth-panel-logo">
+        <div class="panel-icon">🏋️</div>
+        <h2 class="panel-brand">FitLife</h2>
+      </div>
+      <div class="auth-panel-tagline">
+        <h1 class="panel-heading">Your Personal<br>Fitness Partner</h1>
+        <p class="panel-sub">Track workouts, monitor nutrition, calculate BMI, and get AI-powered diet plans — all in one place.</p>
+      </div>
+      <div class="auth-panel-features">
+        <div class="auth-feature-item">
+          <span class="auth-feature-icon">📊</span>
+          <span>Real-time BMI & body metrics</span>
+        </div>
+        <div class="auth-feature-item">
+          <span class="auth-feature-icon">🥗</span>
+          <span>Personalized Indian diet plans</span>
+        </div>
+        <div class="auth-feature-item">
+          <span class="auth-feature-icon">💪</span>
+          <span>Auto-generated workout schedules</span>
+        </div>
+        <div class="auth-feature-item">
+          <span class="auth-feature-icon">📥</span>
+          <span>Export plans as PDF</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Login Card -->
+  <div class="auth-right-panel">
+    <div class="auth-card-pro">
+
+      <!-- Logo (mobile only) -->
+      <div class="auth-logo auth-logo-mobile">
+        <div class="brand-icon" style="width:48px;height:48px;font-size:22px;margin:0 auto 8px;background:var(--gradient);border-radius:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 24px rgba(49,130,206,.3)">🏋️</div>
+        <div class="brand-name" style="font-size:22px;font-weight:800;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">FitLife</div>
+      </div>
+
+      <div class="auth-card-header">
+        <h1 class="auth-title-pro">Welcome back 👋</h1>
+        <p class="auth-sub-pro">Sign in to continue your fitness journey</p>
+      </div>
+
+      <!-- Alerts -->
+      <div class="alert alert-error" ng-show="error" style="margin-bottom:18px">
+        ⚠️ {{ error }}
+      </div>
+      <div class="alert alert-success" ng-show="success" style="margin-bottom:18px">
+        {{ success }}
+      </div>
+
+      <!-- Login Form -->
+      <form ng-submit="login()" novalidate class="auth-form-pro">
+
+        <div class="auth-field-group">
+          <label class="auth-field-label" for="login-email">
+            <span class="auth-field-icon">✉️</span> Email Address
+          </label>
+          <input id="login-email" type="email" class="auth-input-pro"
+                 placeholder="you@example.com"
+                 ng-model="loginData.email"
+                 required autocomplete="email" />
+        </div>
+
+        <div class="auth-field-group">
+          <label class="auth-field-label" for="login-password">
+            <span class="auth-field-icon">🔒</span> Password
+          </label>
+          <input id="login-password" type="password" class="auth-input-pro"
+                 placeholder="••••••••"
+                 ng-model="loginData.password"
+                 required autocomplete="current-password" />
+        </div>
+
+        <button id="login-btn" type="submit" class="auth-btn-pro" ng-disabled="loading">
+          <span ng-if="!loading" style="display:flex;align-items:center;justify-content:center;gap:8px">
+            <span>Sign In</span>
+            <span>→</span>
+          </span>
+          <span ng-if="loading" style="display:flex;align-items:center;justify-content:center;gap:8px">
+            <span class="auth-spinner"></span>
+            <span>Signing in…</span>
+          </span>
+        </button>
+
+      </form>
+
+      <div class="auth-footer-row-pro">
+        Don't have an account? <a href="#!/register">Create one free →</a>
+      </div>
+
+    </div>
+  </div>
+
+</div>

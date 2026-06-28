@@ -1,0 +1,183 @@
+<!-- PROFILE VIEW -->
+<div class="page-header">
+  <h1 class="page-title">My Profile</h1>
+  <p class="page-sub">Manage your personal details and fitness goals</p>
+</div>
+
+<div class="page-body">
+
+  <!-- Loading -->
+  <div class="loader-box" ng-if="loading"><div class="spinner"></div></div>
+
+  <!-- Alert -->
+  <div class="alert" ng-class="'alert-' + msg.type" ng-show="msg.text">{{ msg.text }}</div>
+
+  <div ng-if="!loading" class="fade-up">
+
+    <div style="display:grid;grid-template-columns:1fr 2fr;gap:24px;align-items:start">
+
+      <!-- ── Profile Card (left) ──────────────────── -->
+      <div class="card text-center">
+        <div class="profile-avatar">{{ getInitials(profile.name) }}</div>
+
+        <h2 style="font-size:20px;margin-bottom:4px">{{ profile.name || '—' }}</h2>
+        <p style="font-size:13px;color:var(--text-2);margin-bottom:18px">{{ profile.email }}</p>
+
+        <div style="display:flex;flex-direction:column;gap:10px;text-align:left;margin-bottom:22px">
+
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg-input);border-radius:10px">
+            <span style="font-size:13px;color:var(--text-2)">Age</span>
+            <span style="font-weight:600">{{ profile.age || '—' }} yrs</span>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg-input);border-radius:10px">
+            <span style="font-size:13px;color:var(--text-2)">Gender</span>
+            <span style="font-weight:600;text-transform:capitalize">{{ profile.gender || '—' }}</span>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg-input);border-radius:10px">
+            <span style="font-size:13px;color:var(--text-2)">Height</span>
+            <span style="font-weight:600">{{ profile.height ? profile.height + ' cm' : '—' }}</span>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg-input);border-radius:10px">
+            <span style="font-size:13px;color:var(--text-2)">Weight</span>
+            <span style="font-weight:600">{{ profile.weight ? profile.weight + ' kg' : '—' }}</span>
+          </div>
+
+          <div ng-if="bmi()" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg-input);border-radius:10px">
+            <span style="font-size:13px;color:var(--text-2)">BMI (from profile)</span>
+            <span style="font-weight:700;color:#a78bfa">{{ bmi() }}</span>
+          </div>
+
+        </div>
+
+        <!-- Fitness goal badge -->
+        <div ng-if="profile.fitnessGoal"
+             style="padding:12px;border-radius:var(--r-md);background:var(--gradient-soft);border:1px solid var(--border-accent)">
+          <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">Fitness Goal</div>
+          <div style="font-size:15px;font-weight:700">{{ goalLabel(profile.fitnessGoal) }}</div>
+        </div>
+
+        <button id="edit-profile-btn" class="btn btn-primary btn-block" style="margin-top:18px"
+                ng-click="startEdit()" ng-if="!editing">
+          ✏️ Edit Profile
+        </button>
+      </div>
+
+      <!-- ── Edit Form (right) ─────────────────────── -->
+      <div class="card" ng-if="editing">
+        <div class="card-head">
+          <div class="card-title">✏️ Edit Profile</div>
+        </div>
+
+        <form ng-submit="saveProfile()" novalidate>
+          <div class="form-grid">
+
+            <!-- Name -->
+            <div class="form-group span2">
+              <label class="form-label" for="prof-name">Full Name *</label>
+              <input id="prof-name" type="text" class="form-ctrl"
+                     placeholder="Your full name"
+                     ng-model="form.name" required />
+            </div>
+
+            <!-- Age -->
+            <div class="form-group">
+              <label class="form-label" for="prof-age">Age</label>
+              <input id="prof-age" type="number" class="form-ctrl"
+                     placeholder="25" min="1" max="120"
+                     ng-model="form.age" />
+            </div>
+
+            <!-- Gender -->
+            <div class="form-group">
+              <label class="form-label" for="prof-gender">Gender</label>
+              <select id="prof-gender" class="form-ctrl" ng-model="form.gender">
+                <option value="">Select…</option>
+                <option ng-repeat="g in genders" value="{{ g.value }}">{{ g.label }}</option>
+              </select>
+            </div>
+
+            <!-- Height -->
+            <div class="form-group">
+              <label class="form-label" for="prof-height">Height (cm)</label>
+              <input id="prof-height" type="number" class="form-ctrl"
+                     placeholder="170" min="50" max="300"
+                     ng-model="form.height" />
+            </div>
+
+            <!-- Weight -->
+            <div class="form-group">
+              <label class="form-label" for="prof-weight">Weight (kg)</label>
+              <input id="prof-weight" type="number" class="form-ctrl"
+                     placeholder="70" min="10" max="500"
+                     ng-model="form.weight" />
+            </div>
+
+            <!-- Fitness Goal -->
+            <div class="form-group span2">
+              <label class="form-label">Fitness Goal</label>
+              <div class="goal-grid">
+                <div class="goal-opt" ng-repeat="g in goals"
+                     ng-class="{ active: form.fitnessGoal === g.value }"
+                     ng-click="selectGoal(g.value)">
+                  <div class="goal-icon">{{ g.icon }}</div>
+                  <div class="goal-label">{{ g.label }}</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div style="margin-top:22px;display:flex;gap:12px">
+            <button id="save-profile-btn" type="submit" class="btn btn-primary btn-lg"
+                    ng-disabled="submitting">
+              <span ng-if="!submitting">💾 Save Changes</span>
+              <span ng-if="submitting">Saving…</span>
+            </button>
+            <button type="button" class="btn btn-secondary" ng-click="cancelEdit()">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Read-only panel (right, when not editing) -->
+      <div class="card" ng-if="!editing">
+        <div class="card-head">
+          <div class="card-title">🎯 Fitness Goals Info</div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div style="padding:16px;border-radius:var(--r-md);background:var(--red-bg);border:1px solid rgba(239,68,68,.2)">
+            <div style="font-size:16px;font-weight:700;margin-bottom:4px">🔥 Lose Weight</div>
+            <div style="font-size:13px;color:var(--text-2)">Create a caloric deficit through diet and cardio. Aim for 300–500 kcal deficit daily.</div>
+          </div>
+          <div style="padding:16px;border-radius:var(--r-md);background:var(--green-bg);border:1px solid rgba(16,185,129,.2)">
+            <div style="font-size:16px;font-weight:700;margin-bottom:4px">⚖️ Maintain Weight</div>
+            <div style="font-size:13px;color:var(--text-2)">Eat at maintenance calories. Balance cardio with resistance training.</div>
+          </div>
+          <div style="padding:16px;border-radius:var(--r-md);background:var(--blue-bg);border:1px solid rgba(59,130,246,.2)">
+            <div style="font-size:16px;font-weight:700;margin-bottom:4px">💪 Build Muscle</div>
+            <div style="font-size:13px;color:var(--text-2)">Eat in a caloric surplus. Focus on progressive overload with compound lifts. Aim for 1.6–2.2g protein/kg bodyweight.</div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div style="padding:16px;background:var(--bg-input);border-radius:var(--r-md)">
+            <div style="font-size:13px;color:var(--text-2);margin-bottom:10px;font-weight:600">💡 Daily Protein Target</div>
+            <div ng-if="profile.weight" style="font-size:22px;font-weight:800;color:#a78bfa">
+              {{ (profile.weight * 1.8) | number:0 }}g
+              <span style="font-size:13px;font-weight:400;color:var(--text-2)">/ day (1.8g per kg)</span>
+            </div>
+            <div ng-if="!profile.weight" style="color:var(--text-3);font-size:13px">Set your weight to see target</div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div><!-- /ng-if !loading -->
+</div>

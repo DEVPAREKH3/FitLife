@@ -1,0 +1,190 @@
+<!-- DASHBOARD VIEW -->
+<div class="page-header">
+  <h1 class="page-title">Dashboard</h1>
+  <p class="page-sub">{{ currentUser.name ? 'Welcome back, ' + currentUser.name.split(' ')[0] + '! 👋' : 'Your fitness overview' }}</p>
+</div>
+
+<div class="page-body">
+
+  <!-- Loading -->
+  <div class="loader-box" ng-if="loading">
+    <div class="spinner"></div>
+  </div>
+
+  <div ng-if="!loading">
+
+    <!-- ── Today's Stats ─────────────────────────── -->
+    <div class="stats-grid">
+
+      <div class="stat-card">
+        <div class="stat-icon si-cyan">🥗</div>
+        <div class="stat-val" style="color:#22d3ee">{{ today.calories | number:0 }}</div>
+        <div class="stat-label">Calories Consumed</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon si-purple">🔥</div>
+        <div class="stat-val" style="color:#a78bfa">{{ calsBurned | number:0 }}</div>
+        <div class="stat-label">Calories Burned (est.)</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon" ng-class="netCalories() >= 0 ? 'si-green' : 'si-red'">⚡</div>
+        <div class="stat-val" ng-style="{ color: netCalories() >= 0 ? '#34d399' : '#f87171' }">
+          {{ netCalories() | number:0 }}
+        </div>
+        <div class="stat-label">Net Calories Today</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon si-purple">⚖️</div>
+        <div class="stat-val" ng-style="latestBmi ? {} : { color:'var(--text-3)' }">
+          {{ latestBmi ? latestBmi.bmi : '—' }}
+        </div>
+        <div class="stat-label">Current BMI
+          <span class="badge badge-green" style="margin-left:6px;font-size:11px" ng-if="latestBmi">
+            {{ latestBmi.category }}
+          </span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon si-yellow">💪</div>
+        <div class="stat-val" style="color:#fbbf24">{{ todayWorkoutDuration || 0 }}<span style="font-size:16px;color:var(--text-2)"> min</span></div>
+        <div class="stat-label">Workout Today</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon si-pink">🥩</div>
+        <div class="stat-val" style="color:#f472b6">{{ today.protein | number:0 }}<span style="font-size:16px;color:var(--text-2)">g</span></div>
+        <div class="stat-label">Protein Today</div>
+      </div>
+
+    </div>
+
+    <!-- ── Charts Row ─────────────────────────────── -->
+    <div class="charts-row mb-6">
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">💪 Weekly Workouts</div>
+            <div class="card-sub">Duration in minutes — last 7 days</div>
+          </div>
+          <a href="#!/workouts" class="btn btn-secondary btn-sm">View All</a>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="workoutChart"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">📈 BMI Trend</div>
+            <div class="card-sub">Historical readings</div>
+          </div>
+          <a href="#!/bmi" class="btn btn-secondary btn-sm">Log BMI</a>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="bmiChart"></canvas>
+          <div class="empty-state" ng-if="!latestBmi" style="padding:30px">
+            <div class="empty-icon">⚖️</div>
+            <p>No BMI data yet</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Nutrition Chart ────────────────────────── -->
+    <div class="card mb-6">
+      <div class="card-head">
+        <div>
+          <div class="card-title">🥗 Weekly Nutrition</div>
+          <div class="card-sub">Calories consumed per day</div>
+        </div>
+        <a href="#!/diet" class="btn btn-secondary btn-sm">Log Meal</a>
+      </div>
+      <div class="chart-wrap" style="height:200px">
+        <canvas id="nutritionChart"></canvas>
+      </div>
+    </div>
+
+    <!-- ── Quick Actions ──────────────────────────── -->
+    <div class="card mb-6">
+      <div class="card-title" style="margin-bottom:14px">⚡ Quick Actions</div>
+      <div class="gap-row">
+        <a href="#!/workouts" class="btn btn-primary">
+          💪 Log Workout
+        </a>
+        <a href="#!/diet" class="btn btn-secondary">
+          🥗 Log Meal
+        </a>
+        <a href="#!/bmi" class="btn btn-secondary">
+          ⚖️ Check BMI
+        </a>
+        <a href="#!/profile" class="btn btn-secondary">
+          👤 Update Profile
+        </a>
+      </div>
+    </div>
+
+    <!-- ── Recent Activity (2 columns) ───────────── -->
+    <div class="charts-row-half">
+
+      <!-- Recent Workouts -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">🏃 Recent Workouts</div>
+          <a href="#!/workouts" class="btn btn-secondary btn-sm">All</a>
+        </div>
+
+        <div class="empty-state" ng-if="!recentWorkouts.length">
+          <div class="empty-icon">🏋️</div>
+          <h3>No workouts yet</h3>
+          <p>Start logging your first session!</p>
+        </div>
+
+        <div ng-if="recentWorkouts.length">
+          <div ng-repeat="w in recentWorkouts"
+               style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)"
+               ng-class="{ 'no-border': $last }" >
+            <div>
+              <div style="font-size:14px;font-weight:600">{{ w.exercise }}</div>
+              <div style="font-size:12px;color:var(--text-2)">{{ w.date | date:'d MMM' }} · {{ w.duration }} min</div>
+            </div>
+            <span class="badge" ng-class="'cat-' + w.category">{{ w.category }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Meals -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">🍽️ Recent Meals</div>
+          <a href="#!/diet" class="btn btn-secondary btn-sm">All</a>
+        </div>
+
+        <div class="empty-state" ng-if="!recentMeals.length">
+          <div class="empty-icon">🥗</div>
+          <h3>No meals logged</h3>
+          <p>Track your first meal today!</p>
+        </div>
+
+        <div ng-if="recentMeals.length">
+          <div ng-repeat="m in recentMeals"
+               style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+            <div>
+              <div style="font-size:14px;font-weight:600">{{ m.mealName }}</div>
+              <div style="font-size:12px;color:var(--text-2)">{{ m.date | date:'d MMM' }} · {{ m.calories }} kcal</div>
+            </div>
+            <span class="badge" ng-class="'meal-' + m.mealType">{{ m.mealType }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div><!-- /ng-if !loading -->
+</div>

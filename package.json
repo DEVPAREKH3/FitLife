@@ -1,0 +1,13 @@
+{
+  "name": "fitlife",
+  "version": "1.0.0",
+  "description": "FitLife – Fitness Tracker & Diet Planner",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\" --names \"API,WEB\" --prefix-colors \"magenta,cyan\"",
+    "server": "cd backend && npm run dev",
+    "client": "npx http-server frontend -p 4200 --cors -c-1 -o"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

@@ -1,0 +1,378 @@
+<!-- DIET / NUTRITION VIEW -->
+<div class="page-header">
+  <h1 class="page-title">Diet & Nutrition</h1>
+  <p class="page-sub">Log meals, track macros, and monitor daily intake</p>
+</div>
+
+<div class="page-body">
+
+  <!-- ── Tabs ──────────────────────────────────────── -->
+  <div class="gap-row mb-6">
+    <button id="tab-log-meal"  class="btn" ng-class="tab==='log'?'btn-primary':'btn-secondary'"     ng-click="setTab('log')">     🍽 Log Meal</button>
+    <button id="tab-plan"      class="btn" ng-class="tab==='plan'?'btn-primary':'btn-secondary'"    ng-click="setTab('plan')">    ✨ Recommended Plan</button>
+    <button id="tab-today"     class="btn" ng-class="tab==='today'?'btn-primary':'btn-secondary'"   ng-click="setTab('today')">   📅 Daily Stats</button>
+    <button id="tab-hist-meal" class="btn" ng-class="tab==='history'?'btn-primary':'btn-secondary'" ng-click="setTab('history')"> 📋 History</button>
+  </div>
+
+  <!-- ── Alert ─────────────────────────────────────── -->
+  <div class="alert" ng-class="'alert-' + msg.type" ng-show="msg.text">{{ msg.text }}</div>
+
+  <!-- ══════════════════════════════════════════════
+       TAB: LOG MEAL
+  ══════════════════════════════════════════════ -->
+  <div ng-if="tab === 'log'" class="fade-up">
+
+    <!-- Indian food presets -->
+    <div class="card mb-6">
+      <div class="card-head">
+        <div>
+          <div class="card-title">🇮🇳 Indian Food Presets</div>
+          <div class="card-sub">Click any item to auto-fill the form below</div>
+        </div>
+        <button class="btn btn-secondary btn-sm" ng-click="clearPreset()" ng-if="selectedPreset">✕ Clear</button>
+      </div>
+
+      <div class="preset-grid">
+        <div class="preset-chip"
+             ng-repeat="p in presets"
+             ng-class="{ selected: selectedPreset === p.name }"
+             ng-click="selectPreset(p)">
+          <div class="preset-chip-name">{{ p.name }}</div>
+          <div class="preset-chip-cal">{{ p.calories }} kcal</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Log form -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">➕ Log a Meal</div>
+        <div class="card-sub" ng-if="selectedPreset" style="color:#22d3ee">✔ Pre-filled: {{ selectedPreset }}</div>
+      </div>
+
+      <form ng-submit="logMeal()" novalidate>
+        <div class="form-grid">
+
+          <!-- Meal name -->
+          <div class="form-group span2">
+            <label class="form-label" for="meal-name">Meal Name *</label>
+            <input id="meal-name" type="text" class="form-ctrl"
+                   placeholder="e.g. Dal + Roti, Chicken Curry…"
+                   ng-model="form.mealName" required />
+          </div>
+
+          <!-- Meal type -->
+          <div class="form-group">
+            <label class="form-label" for="meal-type">Meal Type *</label>
+            <select id="meal-type" class="form-ctrl" ng-model="form.mealType" required>
+              <option value="breakfast">🌅 Breakfast</option>
+              <option value="lunch">☀️ Lunch</option>
+              <option value="dinner">🌙 Dinner</option>
+              <option value="snack">🍎 Snack</option>
+            </select>
+          </div>
+
+          <!-- Date -->
+          <div class="form-group">
+            <label class="form-label" for="meal-date">Date</label>
+            <input id="meal-date" type="date" class="form-ctrl"
+                   ng-model="form.date" />
+          </div>
+
+          <!-- Calories -->
+          <div class="form-group">
+            <label class="form-label" for="meal-cal">Calories (kcal) *</label>
+            <input id="meal-cal" type="number" class="form-ctrl"
+                   placeholder="0" min="0"
+                   ng-model="form.calories" required />
+          </div>
+
+          <!-- Protein -->
+          <div class="form-group">
+            <label class="form-label" for="meal-prot">Protein (g) *</label>
+            <input id="meal-prot" type="number" class="form-ctrl"
+                   placeholder="0" min="0" step="0.1"
+                   ng-model="form.protein" required />
+          </div>
+
+          <!-- Carbs -->
+          <div class="form-group">
+            <label class="form-label" for="meal-carbs">Carbs (g) *</label>
+            <input id="meal-carbs" type="number" class="form-ctrl"
+                   placeholder="0" min="0" step="0.1"
+                   ng-model="form.carbs" required />
+          </div>
+
+          <!-- Fats -->
+          <div class="form-group">
+            <label class="form-label" for="meal-fats">Fats (g) *</label>
+            <input id="meal-fats" type="number" class="form-ctrl"
+                   placeholder="0" min="0" step="0.1"
+                   ng-model="form.fats" required />
+          </div>
+
+        </div>
+
+        <!-- Live macro preview -->
+        <div style="margin-top:18px" ng-if="form.protein || form.carbs || form.fats">
+          <div class="macro-row">
+            <div class="macro-box">
+              <div class="macro-val m-protein">{{ form.protein || 0 }}g</div>
+              <div class="macro-lbl">Protein</div>
+            </div>
+            <div class="macro-box">
+              <div class="macro-val m-carbs">{{ form.carbs || 0 }}g</div>
+              <div class="macro-lbl">Carbs</div>
+            </div>
+            <div class="macro-box">
+              <div class="macro-val m-fats">{{ form.fats || 0 }}g</div>
+              <div class="macro-lbl">Fats</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:20px;display:flex;gap:12px">
+          <button id="log-meal-btn" type="submit" class="btn btn-primary btn-lg"
+                  ng-disabled="submitting">
+            <span ng-if="!submitting">🥗 Log Meal</span>
+            <span ng-if="submitting">Saving…</span>
+          </button>
+          <button type="button" class="btn btn-secondary" ng-click="clearPreset()">Clear</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       TAB: DAILY STATS
+  ══════════════════════════════════════════════ -->
+  <div ng-if="tab === 'today'" class="fade-up">
+
+    <!-- Date picker -->
+    <div class="card mb-6">
+      <div class="gap-row">
+        <label class="form-label" style="min-width:80px">Select Date</label>
+        <input id="stats-date" type="date" class="form-ctrl" style="max-width:200px"
+               ng-model="statsDate" ng-change="changeStatsDate()" />
+      </div>
+    </div>
+
+    <div class="loader-box" ng-if="loading"><div class="spinner"></div></div>
+
+    <div ng-if="!loading && dailyStats" id="diet-report-container">
+
+      <!-- PDF download row -->
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px" class="no-print">
+        <button type="button" class="btn btn-secondary btn-sm" ng-click="downloadDietPdf()">📥 Download Today's Report PDF</button>
+      </div>
+
+      <!-- Macro totals -->
+      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">
+        <div class="stat-card">
+          <div class="stat-icon si-yellow">🔥</div>
+          <div class="stat-val" style="color:#fbbf24">{{ dailyStats.totals.calories | number:0 }}</div>
+          <div class="stat-label">Total Calories</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon si-purple">🥩</div>
+          <div class="stat-val" style="color:#a78bfa">{{ dailyStats.totals.protein | number:1 }}g</div>
+          <div class="stat-label">Protein</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon si-cyan">🍞</div>
+          <div class="stat-val" style="color:#22d3ee">{{ dailyStats.totals.carbs | number:1 }}g</div>
+          <div class="stat-label">Carbohydrates</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon si-yellow">🧈</div>
+          <div class="stat-val" style="color:#fbbf24">{{ dailyStats.totals.fats | number:1 }}g</div>
+          <div class="stat-label">Fats</div>
+        </div>
+      </div>
+
+      <!-- Chart + meal list side by side -->
+      <div class="charts-row">
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">🍽️ Today's Meals</div>
+            <div class="card-sub">{{ dailyStats.entries.length }} items logged</div>
+          </div>
+
+          <div class="empty-state" ng-if="!dailyStats.entries.length">
+            <div class="empty-icon">🥗</div>
+            <h3>No meals on this date</h3>
+            <p>Switch to Log tab to add meals</p>
+          </div>
+
+          <div ng-if="dailyStats.entries.length">
+            <div ng-repeat="e in dailyStats.entries"
+                 style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border)">
+              <div>
+                <div style="font-size:14px;font-weight:600">{{ e.mealName }}</div>
+                <div style="font-size:12px;color:var(--text-2)">
+                  P: {{ e.protein }}g · C: {{ e.carbs }}g · F: {{ e.fats }}g
+                </div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-weight:700;color:#fbbf24">{{ e.calories }} kcal</div>
+                <span class="badge" ng-class="'meal-' + e.mealType">{{ e.mealType }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">🥧 Macro Breakdown</div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="macroChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       TAB: HISTORY
+  ══════════════════════════════════════════════ -->
+  <div ng-if="tab === 'history'">
+
+    <div class="loader-box" ng-if="loading"><div class="spinner"></div></div>
+
+    <div class="card fade-up" ng-if="!loading">
+      <div class="card-head">
+        <div class="card-title">📋 Meal History</div>
+        <div class="text-sm text-muted">Most recent first</div>
+      </div>
+
+      <div class="empty-state" ng-if="!entries.length">
+        <div class="empty-icon">🥗</div>
+        <h3>No meals logged yet</h3>
+        <p>Start tracking your nutrition today!</p>
+      </div>
+
+      <div class="tbl-wrap" ng-if="entries.length">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Meal</th>
+              <th>Type</th>
+              <th>Calories</th>
+              <th>Protein</th>
+              <th>Carbs</th>
+              <th>Fats</th>
+              <th>Date</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="e in entries">
+              <td><strong>{{ e.mealName }}</strong></td>
+              <td><span class="badge" ng-class="'meal-' + e.mealType">{{ e.mealType }}</span></td>
+              <td style="color:#fbbf24;font-weight:600">{{ e.calories }}</td>
+              <td>{{ e.protein }}g</td>
+              <td>{{ e.carbs }}g</td>
+              <td>{{ e.fats }}g</td>
+              <td>{{ e.date | date:'d MMM yyyy' }}</td>
+              <td>
+                <button class="btn btn-danger btn-sm btn-icon" ng-click="deleteEntry(e._id)" title="Delete">🗑</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="gap-row" style="margin-top:16px;justify-content:center" ng-if="totalPages > 1">
+        <button class="btn btn-secondary btn-sm" ng-click="prevPage()" ng-disabled="page === 1">← Prev</button>
+        <span class="text-muted text-sm">Page {{ page }} of {{ totalPages }}</span>
+        <button class="btn btn-secondary btn-sm" ng-click="nextPage()" ng-disabled="page === totalPages">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       TAB: RECOMMENDED DIET PLAN
+  ══════════════════════════════════════════════ -->
+  <div ng-if="tab === 'plan'" class="fade-up">
+
+    <!-- Plan Summary Header -->
+    <div class="card mb-6" id="recommended-diet-container">
+      <div class="card-head" style="border-bottom:1px solid var(--border);padding-bottom:14px;margin-bottom:14px">
+        <div>
+          <div class="card-title">✨ Recommended Daily Diet Plan</div>
+          <div class="card-sub">Optimized for your fitness goal: <strong style="color:var(--accent)">{{ recSummary.goalText }}</strong></div>
+        </div>
+        <div class="gap-row">
+          <!-- Veg / Non-veg Toggle -->
+          <div style="display:flex;background:var(--bg-input);padding:4px;border-radius:8px">
+            <button type="button" class="btn btn-sm" ng-class="dietType === 'veg' ? 'btn-primary' : 'btn-secondary'" ng-click="changeDietType('veg')" style="padding:4px 10px;border-radius:6px;border:none">🥗 Veg</button>
+            <button type="button" class="btn btn-sm" ng-class="dietType === 'eggetarian' ? 'btn-primary' : 'btn-secondary'" ng-click="changeDietType('eggetarian')" style="padding:4px 10px;border-radius:6px;border:none">🥚 Eggetarian</button>
+            <button type="button" class="btn btn-sm" ng-class="dietType === 'non-veg' ? 'btn-primary' : 'btn-secondary'" ng-click="changeDietType('non-veg')" style="padding:4px 10px;border-radius:6px;border:none">🍗 Non-Veg</button>
+          </div>
+          <!-- Download PDF -->
+          <button type="button" class="btn btn-secondary btn-sm" ng-click="downloadPlanPdf()">📥 Download PDF</button>
+        </div>
+      </div>
+
+      <!-- Macro Split Summary -->
+      <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:12px;margin-bottom:20px">
+        <div style="background:var(--bg-input);padding:12px;border-radius:10px;text-align:center">
+          <div style="font-size:11px;color:var(--text-3);text-transform:uppercase">Calories</div>
+          <div style="font-size:18px;font-weight:700;color:var(--yellow);margin-top:2px">{{ recSummary.targetCalories }} kcal</div>
+        </div>
+        <div style="background:var(--bg-input);padding:12px;border-radius:10px;text-align:center">
+          <div style="font-size:11px;color:var(--text-3);text-transform:uppercase">Protein</div>
+          <div style="font-size:18px;font-weight:700;color:#a78bfa;margin-top:2px">{{ recSummary.protein }}g</div>
+        </div>
+        <div style="background:var(--bg-input);padding:12px;border-radius:10px;text-align:center">
+          <div style="font-size:11px;color:var(--text-3);text-transform:uppercase">Carbohydrates</div>
+          <div style="font-size:18px;font-weight:700;color:#22d3ee;margin-top:2px">{{ recSummary.carbs }}g</div>
+        </div>
+        <div style="background:var(--bg-input);padding:12px;border-radius:10px;text-align:center">
+          <div style="font-size:11px;color:var(--text-3);text-transform:uppercase">Fats</div>
+          <div style="font-size:18px;font-weight:700;color:var(--red);margin-top:2px">{{ recSummary.fats }}g</div>
+        </div>
+      </div>
+
+      <!-- Meals list -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:16px">
+        <div ng-repeat="meal in recPlan.meals" style="background:var(--bg-input);padding:16px;border-radius:12px;border:1px solid var(--border)">
+          <div style="font-size:15px;font-weight:700;margin-bottom:10px;border-bottom:1px solid rgba(0,0,0,0.05);padding-bottom:6px">{{ meal.name }}</div>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div ng-repeat="item in meal.items" style="font-size:13px">
+              <div style="font-weight:600;color:var(--text-1)">{{ item.name }}</div>
+              <div style="font-size:11px;color:var(--text-3);margin-top:2px">Qty: {{ item.qty }} · {{ item.cal }} kcal</div>
+            </div>
+          </div>
+          <div class="divider" style="margin:12px 0 8px"></div>
+          <div style="font-size:11px;color:var(--text-2);display:flex;justify-content:space-between">
+            <span>Calories: <strong>{{ meal.totals.cal }} kcal</strong></span>
+            <span>P: <strong>{{ meal.totals.prot }}g</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Smoothie Recommendation Alert/Tip Box -->
+      <div style="margin-top:20px;background:rgba(49,130,206,0.06);border:1px solid rgba(49,130,206,0.15);padding:14px;border-radius:10px;font-size:13px;color:var(--text-2);display:flex;align-items:flex-start;gap:10px">
+        <span style="font-size:18px">🥤</span>
+        <div>
+          <strong>Healthy Smoothie Suggestion:</strong> For breakfast or evening snack, try a nutritious smoothie! Blend 1 medium banana, 1 glass of milk (skimmed, whole or fat milk), 1 handful of nuts (like almonds), 1 tbsp honey, and 1 tbsp chia/flax seeds for a rich macro boost.
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <div style="margin-top:20px;text-align:right">
+        <button type="button" class="btn btn-primary" ng-click="logRecommendedDiet()" ng-disabled="submitting">
+          <span ng-if="!submitting">🥗 Log Recommended Diet for Today</span>
+          <span ng-if="submitting">Logging…</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /page-body -->

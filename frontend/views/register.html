@@ -1,0 +1,106 @@
+<div class="auth-bg">
+  <div class="auth-card" style="max-width:520px">
+
+    <!-- Logo -->
+    <div class="auth-logo">
+      <div class="brand-icon" style="width:54px;height:54px;font-size:26px;margin:0 auto 10px;background:var(--gradient);border-radius:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 30px rgba(49,130,206,.25)">🏋️</div>
+      <div class="brand-name" style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">FitLife</div>
+    </div>
+
+    <h1 class="auth-title">Start your journey</h1>
+    <p class="auth-sub">Create your free account today</p>
+
+    <!-- Alert -->
+    <div class="alert alert-error" ng-show="error">⚠️ {{ error }}</div>
+
+    <form ng-submit="register()" novalidate>
+
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;gap:14px">
+
+        <!-- Name -->
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label" for="reg-name">Full Name *</label>
+          <input id="reg-name" type="text" class="form-ctrl"
+                 placeholder="Arjun Sharma"
+                 ng-model="registerData.name" required />
+        </div>
+
+        <!-- Email -->
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label" for="reg-email">Email Address *</label>
+          <input id="reg-email" type="email" class="form-ctrl"
+                 placeholder="you@example.com"
+                 ng-model="registerData.email" required autocomplete="email" />
+        </div>
+
+        <!-- Password -->
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label" for="reg-password">Password * <span class="form-hint">(min 6 characters)</span></label>
+          <input id="reg-password" type="password" class="form-ctrl"
+                 placeholder="••••••••"
+                 ng-model="registerData.password" required autocomplete="new-password" />
+        </div>
+
+        <!-- Age -->
+        <div class="form-group">
+          <label class="form-label" for="reg-age">Age</label>
+          <input id="reg-age" type="number" class="form-ctrl"
+                 placeholder="25" min="1" max="120"
+                 ng-model="registerData.age" />
+        </div>
+
+        <!-- Gender -->
+        <div class="form-group">
+          <label class="form-label" for="reg-gender">Gender</label>
+          <select id="reg-gender" class="form-ctrl" ng-model="registerData.gender">
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <!-- Height -->
+        <div class="form-group">
+          <label class="form-label" for="reg-height">Height (cm)</label>
+          <input id="reg-height" type="number" class="form-ctrl"
+                 placeholder="170" min="50" max="300"
+                 ng-model="registerData.height" />
+        </div>
+
+        <!-- Weight -->
+        <div class="form-group">
+          <label class="form-label" for="reg-weight">Weight (kg)</label>
+          <input id="reg-weight" type="number" class="form-ctrl"
+                 placeholder="70" min="10" max="500"
+                 ng-model="registerData.weight" />
+        </div>
+
+        <!-- Fitness Goal -->
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Fitness Goal</label>
+          <select id="reg-goal" class="form-ctrl" ng-model="registerData.fitnessGoal">
+            <option value="lose_weight">🔥 Lose Weight</option>
+            <option value="maintain">⚖️ Maintain Weight</option>
+            <option value="build_muscle">💪 Build Muscle</option>
+          </select>
+        </div>
+
+      </div>
+
+      <button id="register-btn" type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:18px"
+              ng-disabled="loading">
+        <span ng-if="!loading">✨ Create Account</span>
+        <span ng-if="loading">
+          <span style="display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle"></span>
+          Creating account…
+        </span>
+      </button>
+
+    </form>
+
+    <div class="auth-footer-row">
+      Already have an account? <a href="#!/login">Sign in →</a>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,232 @@
+<!-- WORKOUTS VIEW -->
+<div class="page-header">
+  <h1 class="page-title">Workout Logger</h1>
+  <p class="page-sub">Log exercises, review history, and track weekly progress</p>
+</div>
+
+<div class="page-body">
+
+  <!-- ── Tabs ──────────────────────────────────────── -->
+  <div class="gap-row mb-6">
+    <button id="tab-log"     class="btn" ng-class="tab==='log'?'btn-primary':'btn-secondary'"     ng-click="setTab('log')">     📝 Log Workout</button>
+    <button id="tab-history" class="btn" ng-class="tab==='history'?'btn-primary':'btn-secondary'" ng-click="setTab('history')"> 📋 History</button>
+    <button id="tab-summary" class="btn" ng-class="tab==='summary'?'btn-primary':'btn-secondary'" ng-click="setTab('summary')"> 📊 Weekly Summary</button>
+  </div>
+
+  <!-- ── Alert ─────────────────────────────────────── -->
+  <div class="alert" ng-class="'alert-' + msg.type" ng-show="msg.text">{{ msg.text }}</div>
+
+  <!-- ══════════════════════════════════════════════
+       TAB: LOG WORKOUT
+  ══════════════════════════════════════════════ -->
+  <div ng-if="tab === 'log'">
+    <div class="card fade-up">
+      <div class="card-head">
+        <div>
+          <div class="card-title">➕ New Workout Entry</div>
+          <div class="card-sub">Fill in the details below to log your session</div>
+        </div>
+      </div>
+
+      <form ng-submit="logWorkout()" novalidate>
+        <div class="form-grid">
+
+          <!-- Exercise name -->
+          <div class="form-group span2">
+            <label class="form-label" for="ex-name">Exercise Name *</label>
+            <input id="ex-name" type="text" class="form-ctrl"
+                   placeholder="e.g. Bench Press, Running, Squats…"
+                   ng-model="form.exercise" required />
+          </div>
+
+          <!-- Category -->
+          <div class="form-group">
+            <label class="form-label" for="ex-cat">Category *</label>
+            <select id="ex-cat" class="form-ctrl" ng-model="form.category" required>
+              <option ng-repeat="c in categories" value="{{ c }}">{{ c | uppercase }}</option>
+            </select>
+          </div>
+
+          <!-- Duration -->
+          <div class="form-group">
+            <label class="form-label" for="ex-dur">Duration (min) *</label>
+            <input id="ex-dur" type="number" class="form-ctrl"
+                   placeholder="30" min="1"
+                   ng-model="form.duration" required />
+          </div>
+
+          <!-- Sets -->
+          <div class="form-group">
+            <label class="form-label" for="ex-sets">Sets</label>
+            <input id="ex-sets" type="number" class="form-ctrl"
+                   placeholder="3" min="1"
+                   ng-model="form.sets" />
+          </div>
+
+          <!-- Reps -->
+          <div class="form-group">
+            <label class="form-label" for="ex-reps">Reps</label>
+            <input id="ex-reps" type="number" class="form-ctrl"
+                   placeholder="10" min="1"
+                   ng-model="form.reps" />
+          </div>
+
+          <!-- Weight -->
+          <div class="form-group">
+            <label class="form-label" for="ex-weight">Weight (kg) <span class="form-hint">0 = bodyweight</span></label>
+            <input id="ex-weight" type="number" class="form-ctrl"
+                   placeholder="0" min="0" step="0.5"
+                   ng-model="form.weight" />
+          </div>
+
+          <!-- Date -->
+          <div class="form-group">
+            <label class="form-label" for="ex-date">Date</label>
+            <input id="ex-date" type="date" class="form-ctrl"
+                   ng-model="form.date" />
+          </div>
+
+        </div>
+
+        <div style="margin-top:22px;display:flex;gap:12px">
+          <button id="log-workout-btn" type="submit" class="btn btn-primary btn-lg"
+                  ng-disabled="submitting">
+            <span ng-if="!submitting">💪 Log Workout</span>
+            <span ng-if="submitting">Saving…</span>
+          </button>
+          <button type="button" class="btn btn-secondary" ng-click="form = {exercise:'',category:'cardio',sets:null,reps:null,weight:0,duration:30,date:form.date}">
+            Clear
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       TAB: HISTORY
+  ══════════════════════════════════════════════ -->
+  <div ng-if="tab === 'history'">
+
+    <div class="loader-box" ng-if="loading"><div class="spinner"></div></div>
+
+    <div class="card fade-up" ng-if="!loading">
+      <div class="card-head">
+        <div class="card-title">📋 Workout History</div>
+        <div class="text-sm text-muted">Sorted by most recent</div>
+      </div>
+
+      <div class="empty-state" ng-if="!workouts.length">
+        <div class="empty-icon">🏋️</div>
+        <h3>No workouts logged yet</h3>
+        <p>Head to the Log tab to add your first workout!</p>
+      </div>
+
+      <div class="tbl-wrap" ng-if="workouts.length">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Exercise</th>
+              <th>Category</th>
+              <th>Sets × Reps</th>
+              <th>Weight</th>
+              <th>Duration</th>
+              <th>Date</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="w in workouts">
+              <td><strong>{{ w.exercise }}</strong></td>
+              <td><span class="badge" ng-class="'cat-' + w.category">{{ w.category }}</span></td>
+              <td>{{ w.sets || '—' }} × {{ w.reps || '—' }}</td>
+              <td>{{ w.weight > 0 ? w.weight + ' kg' : 'Bodyweight' }}</td>
+              <td>{{ w.duration }} min</td>
+              <td>{{ w.date | date:'d MMM yyyy' }}</td>
+              <td>
+                <button class="btn btn-danger btn-sm btn-icon" ng-click="deleteWorkout(w._id)" title="Delete">🗑</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="gap-row" style="margin-top:16px;justify-content:center" ng-if="totalPages > 1">
+        <button class="btn btn-secondary btn-sm" ng-click="prevPage()" ng-disabled="page === 1">← Prev</button>
+        <span class="text-muted text-sm">Page {{ page }} of {{ totalPages }}</span>
+        <button class="btn btn-secondary btn-sm" ng-click="nextPage()" ng-disabled="page === totalPages">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       TAB: WEEKLY SUMMARY
+  ══════════════════════════════════════════════ -->
+  <div ng-if="tab === 'summary'">
+
+    <div class="loader-box" ng-if="loading"><div class="spinner"></div></div>
+
+    <div ng-if="!loading" class="fade-up">
+
+      <!-- Week overview -->
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">
+        <div class="stat-card">
+          <div class="stat-icon si-purple">📅</div>
+          <div class="stat-val" style="color:#a78bfa">{{ summary.daily.length }}</div>
+          <div class="stat-label">Active Days</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon si-cyan">⏱</div>
+          <div class="stat-val" style="color:#22d3ee">{{ totalWeekDuration() }}<span style="font-size:16px;color:var(--text-2)"> min</span></div>
+          <div class="stat-label">Total Duration</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon si-green">🏋️</div>
+          <div class="stat-val" style="color:#34d399">{{ summary.categories.length }}</div>
+          <div class="stat-label">Muscle Groups</div>
+        </div>
+      </div>
+
+      <!-- Bar chart -->
+      <div class="card mb-6">
+        <div class="card-head">
+          <div class="card-title">📊 Daily Workout Duration (Last 7 Days)</div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="summaryChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Category breakdown -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">💪 Muscle Group Breakdown</div>
+        </div>
+
+        <div class="empty-state" ng-if="!summary.categories.length">
+          <div class="empty-icon">📊</div>
+          <h3>No data this week</h3>
+          <p>Log some workouts to see your breakdown</p>
+        </div>
+
+        <div class="cat-cards-grid" ng-if="summary.categories.length">
+          <div class="cat-card" ng-repeat="cat in summary.categories">
+            <div class="cat-card-name">
+              <span class="badge" ng-class="'cat-' + cat._id">{{ cat._id }}</span>
+            </div>
+            <div class="cat-card-meta" style="margin-top:8px">
+              <div>⏱ {{ cat.totalDuration }} min</div>
+              <div>🔁 {{ cat.totalSets }} total sets</div>
+              <div>💪 {{ cat.count }} sessions</div>
+              <div style="margin-top:6px;font-size:11px;color:var(--text-3)">
+                {{ cat.exercises.join(', ') }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /page-body -->

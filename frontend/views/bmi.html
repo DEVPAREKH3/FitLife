@@ -1,0 +1,448 @@
+<!-- BMI VIEW -->
+<div class="page-header">
+  <h1 class="page-title">BMI & Fitness Planner</h1>
+  <p class="page-sub">Track your BMI, body composition metrics, and get custom fitness plans</p>
+</div>
+
+<div class="page-body">
+
+  <!-- ── Tabs ──────────────────────────────────────── -->
+  <div class="gap-row mb-6">
+    <button id="tab-bmi-calc"    class="btn" ng-class="tab==='calc'?'btn-primary':'btn-secondary'"    ng-click="setTab('calc')">    ⚖️ Plan & Calculate</button>
+    <button id="tab-bmi-history" class="btn" ng-class="tab==='history'?'btn-primary':'btn-secondary'" ng-click="setTab('history')"> 📈 History & Trend</button>
+  </div>
+
+  <!-- ── Alert ─────────────────────────────────────── -->
+  <div class="alert" ng-class="'alert-' + msg.type" ng-show="msg.text">{{ msg.text }}</div>
+
+  <!-- ══════════════════════════════════════════════
+       TAB: CALCULATE & PLAN
+  ══════════════════════════════════════════════ -->
+  <div ng-if="tab === 'calc'" class="fade-up">
+
+    <div style="display:grid;grid-template-columns: 1fr 1fr;gap:24px;align-items:start">
+
+      <!-- Input Form -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">➕ Enter Your Details</div>
+          <div class="card-sub">Used to calculate BMI, BMR, TDEE & plans</div>
+        </div>
+
+        <form ng-submit="calculate()" novalidate>
+          <div class="form-grid">
+
+            <div class="form-group">
+              <label class="form-label" for="bmi-weight">Weight (kg) *</label>
+              <input id="bmi-weight" type="number" class="form-ctrl"
+                     placeholder="70" min="10" max="500" step="0.1"
+                     ng-model="form.weight" ng-change="previewBmi()" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="bmi-height">Height (cm) *</label>
+              <input id="bmi-height" type="number" class="form-ctrl"
+                     placeholder="175" min="50" max="300" step="0.1"
+                     ng-model="form.height" ng-change="previewBmi()" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="bmi-age">Age (years) *</label>
+              <input id="bmi-age" type="number" class="form-ctrl"
+                     placeholder="25" min="1" max="120"
+                     ng-model="form.age" required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="bmi-gender">Gender *</label>
+              <select id="bmi-gender" class="form-ctrl" ng-model="form.gender" required>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </div>
+
+            <div class="form-group span2">
+              <label class="form-label" for="bmi-activity">Activity Level *</label>
+              <select id="bmi-activity" class="form-ctrl" ng-model="form.activityLevel" required>
+                <option ng-repeat="a in activityLevels" value="{{ a.value }}">{{ a.label }}</option>
+              </select>
+            </div>
+
+            <div class="form-group span2">
+              <label class="form-label" for="bmi-requirement">Target Goal / Requirement *</label>
+              <select id="bmi-requirement" class="form-ctrl" ng-model="form.requirement" required>
+                <option ng-repeat="r in requirements" value="{{ r.value }}">{{ r.label }}</option>
+              </select>
+            </div>
+
+            <div class="form-group span2">
+              <label class="form-label" for="bmi-diet">Diet Preference *</label>
+              <select id="bmi-diet" class="form-ctrl" ng-model="form.dietType" required>
+                <option value="veg">🥦 Vegetarian</option>
+                <option value="eggetarian">🥚 Eggetarian</option>
+                <option value="non-veg">🥩 Non-Vegetarian</option>
+              </select>
+            </div>
+
+            <div class="form-group span2">
+              <label class="form-label" for="bmi-date">Date</label>
+              <input id="bmi-date" type="date" class="form-ctrl" ng-model="form.date" />
+            </div>
+
+          </div>
+
+          <!-- Live Preview -->
+          <div style="margin-top:20px" ng-if="previewVal">
+            <div class="divider"></div>
+            <div style="text-align:center;padding:12px 0">
+              <div style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--text-3);margin-bottom:6px">Live BMI Preview</div>
+              <div class="bmi-num" ng-style="{ color: previewCat === 'Normal' ? '#10b981' : previewCat === 'Underweight' ? '#3b82f6' : previewCat === 'Overweight' ? '#f59e0b' : '#ef4444' }">
+                {{ previewVal }}
+              </div>
+              <span class="bmi-cat" ng-class="'bmi-' + previewCat.toLowerCase()">
+                {{ previewCat }}
+              </span>
+            </div>
+          </div>
+
+          <div style="margin-top:18px">
+            <button id="calc-bmi-btn" type="submit" class="btn btn-primary btn-lg btn-block" ng-disabled="submitting">
+              <span ng-if="!submitting">⚖️ Calculate & Generate Plan</span>
+              <span ng-if="submitting">Generating…</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Result Card -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">📊 Your Result</div>
+        </div>
+
+        <div ng-if="!result" class="empty-state">
+          <div class="empty-icon">⚖️</div>
+          <h3>No result yet</h3>
+          <p>Fill out the form and click Calculate to generate your custom fit plan</p>
+        </div>
+
+        <div ng-if="result" class="bmi-display">
+          <div class="bmi-num" ng-style="bmiColorStyle(result.category)">{{ result.bmi }}</div>
+          <span ng-class="bmiCatClass(result.category)">{{ result.category }}</span>
+
+          <!-- BMI Scale bar -->
+          <div class="bmi-scale-bar" style="margin-top:20px">
+            <div class="bmi-seg bmi-seg-1"></div>
+            <div class="bmi-seg bmi-seg-2"></div>
+            <div class="bmi-seg bmi-seg-3"></div>
+            <div class="bmi-seg bmi-seg-4"></div>
+          </div>
+          <div class="bmi-scale-labels">
+            <span>&lt;18.5</span><span>18.5</span><span>25</span><span>30+</span>
+          </div>
+
+          <div style="margin-top:22px;display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:left">
+            <div style="background:var(--bg-input);border-radius:10px;padding:14px">
+              <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px">Weight</div>
+              <div style="font-size:18px;font-weight:700;margin-top:2px">{{ result.weight }} kg</div>
+            </div>
+            <div style="background:var(--bg-input);border-radius:10px;padding:14px">
+              <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px">Height</div>
+              <div style="font-size:18px;font-weight:700;margin-top:2px">{{ result.height }} cm</div>
+            </div>
+          </div>
+
+          <!-- Detailed Body Metrics -->
+          <div ng-if="bodyMetrics" style="margin-top:20px;text-align:left">
+            <div class="divider"></div>
+            <h4 style="font-size:14px;color:var(--text-1);font-weight:700;margin-bottom:12px">🧬 Detailed Body Metrics</h4>
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px">
+              <div style="padding:10px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:8px">
+                <span style="color:var(--text-2)">BMR (Basic Metabolism)</span>
+                <div style="font-size:16px;font-weight:700;color:var(--text-1);margin-top:4px">{{ bodyMetrics.bmr }} kcal/day</div>
+              </div>
+              <div style="padding:10px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:8px">
+                <span style="color:var(--text-2)">TDEE (Daily Calories Burn)</span>
+                <div style="font-size:16px;font-weight:700;color:var(--text-1);margin-top:4px">{{ bodyMetrics.tdee }} kcal/day</div>
+              </div>
+              <div style="padding:10px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:8px">
+                <span style="color:var(--text-2)">Ideal Weight Range</span>
+                <div style="font-size:16px;font-weight:700;color:#10b981;margin-top:4px">{{ bodyMetrics.idealMin }} - {{ bodyMetrics.idealMax }} kg</div>
+              </div>
+            </div>
+
+            <!-- Target Macros -->
+            <div style="margin-top:14px;padding:12px;background:var(--bg-input);border-radius:8px">
+              <span style="font-size:11px;text-transform:uppercase;color:var(--text-3);letter-spacing:0.5px">Recommended Daily Macros Split</span>
+              <div style="display:flex;justify-content:space-between;margin-top:8px;text-align:center">
+                <div>
+                  <div style="font-weight:700;color:#a78bfa">{{ bodyMetrics.protein }}g</div>
+                  <div style="font-size:10px;color:var(--text-2)">Protein (30%)</div>
+                </div>
+                <div>
+                  <div style="font-weight:700;color:#22d3ee">{{ bodyMetrics.carbs }}g</div>
+                  <div style="font-size:10px;color:var(--text-2)">Carbs (50%)</div>
+                </div>
+                <div>
+                  <div style="font-weight:700;color:#fbbf24">{{ bodyMetrics.fats }}g</div>
+                  <div style="font-size:10px;color:var(--text-2)">Fats (20%)</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Health Assessment & Advice -->
+            <div style="margin-top:14px;display:grid;grid-template-columns:1fr;gap:10px">
+              <div style="padding:12px;background:rgba(49,130,206,0.03);border:1px solid var(--border);border-radius:8px">
+                <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px">Estimated Body Fat %</div>
+                <div style="font-size:16px;font-weight:700;color:var(--accent);margin-top:4px">{{ bodyMetrics.bodyFat }}%</div>
+              </div>
+              <div style="padding:12px;background:rgba(49,130,206,0.03);border:1px solid var(--border);border-radius:8px">
+                <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px">Target Weight Adjustment</div>
+                <div style="font-size:13px;font-weight:600;color:var(--text-1);margin-top:4px">{{ bodyMetrics.weightAdvice }}</div>
+              </div>
+              <div style="padding:12px;background:rgba(239,68,68,0.03);border:1px solid rgba(239,68,68,0.15);border-radius:8px">
+                <div style="font-size:11px;color:#ef4444;text-transform:uppercase;letter-spacing:0.5px">Health Risk Level</div>
+                <div style="font-size:12px;color:var(--text-2);margin-top:4px">{{ bodyMetrics.healthRisk }}</div>
+              </div>
+              <div style="padding:12px;background:rgba(16,185,129,0.03);border:1px solid rgba(16,185,129,0.15);border-radius:8px">
+                <div style="font-size:11px;color:#10b981;text-transform:uppercase;letter-spacing:0.5px">Recommended Lifestyle Action</div>
+                <div style="font-size:12px;color:var(--text-2);margin-top:4px">{{ bodyMetrics.lifestyleAction }}</div>
+              </div>
+            </div> <!-- Close Health Assessment grid -->
+
+          </div> <!-- Close bodyMetrics container -->
+        </div> <!-- Close bmi-display container -->
+      </div> <!-- Close Result Card container -->
+    </div> <!-- Close main layout grid -->
+
+    <!-- ══════════════════════════════════════════════
+         AUTO GENERATED PLANS CONTAINER
+    ══════════════════════════════════════════════ -->
+    <div ng-if="result && bodyMetrics" class="card mt-6" style="animation-delay: 0.1s">
+      <div class="card-head" style="border-bottom:1px solid var(--border);padding-bottom:14px;margin-bottom:14px">
+        <div>
+          <div class="card-title">✨ Automatically Generated Plans</div>
+          <div class="card-sub" style="color:var(--accent);font-weight:600">Goal: {{ bodyMetrics.goalText }}</div>
+        </div>
+        <!-- Sub-tabs & PDF Export button -->
+        <div style="display:flex;gap:8px;align-items:center">
+          <button type="button" class="btn btn-sm btn-secondary" ng-click="exportPlanPdf()" style="border-color:var(--accent);color:var(--accent)">
+            📄 Export to PDF
+          </button>
+          <div style="width:1px;height:24px;background:var(--border);margin:0 4px"></div>
+          <button type="button" class="btn btn-sm" ng-class="planTab === 'diet' ? 'btn-primary' : 'btn-secondary'" ng-click="setPlanTab('diet')">🥗 Diet Plan</button>
+          <button type="button" class="btn btn-sm" ng-class="planTab === 'workout' ? 'btn-primary' : 'btn-secondary'" ng-click="setPlanTab('workout')">💪 Workout Plan</button>
+        </div>
+      </div>
+
+      <!-- Plan: Diet -->
+      <div ng-if="planTab === 'diet'" class="fade-up">
+        <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:16px">
+          <div ng-repeat="meal in generatedDiet.meals" ng-init="mealIndex = $index" style="background:var(--bg-input);padding:16px;border-radius:12px;border:1px solid var(--border)">
+            <div style="font-size:15px;font-weight:700;margin-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:6px;display:flex;justify-content:space-between;align-items:center">
+              <span>{{ meal.name }}</span>
+              <button type="button" class="btn btn-secondary btn-sm" ng-click="startAddDietItem(mealIndex)" style="padding: 2px 6px; font-size: 10px;" title="Add Meal Item">➕ Add</button>
+            </div>
+            
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div ng-repeat="item in meal.items" ng-init="itemIndex = $index" style="font-size:13px; position:relative; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.05)">
+                
+                <!-- Display Mode -->
+                <div ng-if="editingDietIndex !== mealIndex || editingDietItemIndex !== itemIndex">
+                  <div style="display:flex; justify-content:space-between; align-items:flex-start">
+                    <div style="font-weight:600;color:var(--text-1); flex: 1; word-break: break-word;">{{ item.name }}</div>
+                    <div style="display:flex; gap: 4px; margin-left: 8px;">
+                      <button type="button" class="btn btn-sm btn-icon" ng-click="startEditDietItem(mealIndex, itemIndex, item)" style="padding: 2px 4px; font-size: 11px; background: transparent; border: none; color: var(--text-3);" title="Edit item">✏️</button>
+                      <button type="button" class="btn btn-sm btn-icon" ng-click="deleteDietItem(mealIndex, itemIndex)" style="padding: 2px 4px; font-size: 11px; background: transparent; border: none; color: var(--red);" title="Delete item">🗑️</button>
+                    </div>
+                  </div>
+                  <div style="font-size:11px;color:var(--text-3);margin-top:2px">
+                    Qty: {{ item.qty }} · {{ item.cal }} kcal · P: {{ item.prot }}g · C: {{ item.carb }}g · F: {{ item.fat }}g
+                  </div>
+                </div>
+
+                <!-- Edit Mode -->
+                <div ng-if="editingDietIndex === mealIndex && editingDietItemIndex === itemIndex" class="plan-edit-box" style="background: rgba(255,255,255,0.03); padding: 8px; border-radius: 6px; margin-top: 4px;">
+                  <div style="display:flex; flex-direction:column; gap:6px;">
+                    <input type="text" class="form-ctrl form-ctrl-sm" ng-model="editDietItemObj.name" placeholder="Item name" required style="font-size: 12px; padding: 4px 8px; height: auto;" />
+                    <input type="text" class="form-ctrl form-ctrl-sm" ng-model="editDietItemObj.qty" placeholder="Qty (e.g. 100g)" style="font-size: 12px; padding: 4px 8px; height: auto;" />
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+                      <input type="number" class="form-ctrl form-ctrl-sm" ng-model="editDietItemObj.cal" placeholder="Calories" title="Calories" style="font-size: 11px; padding: 4px 8px; height: auto;" />
+                      <input type="number" class="form-ctrl form-ctrl-sm" ng-model="editDietItemObj.prot" placeholder="Prot" title="Protein (g)" style="font-size: 11px; padding: 4px 8px; height: auto;" />
+                      <input type="number" class="form-ctrl form-ctrl-sm" ng-model="editDietItemObj.carb" placeholder="Carb" title="Carbs (g)" style="font-size: 11px; padding: 4px 8px; height: auto;" />
+                      <input type="number" class="form-ctrl form-ctrl-sm" ng-model="editDietItemObj.fat" placeholder="Fat" title="Fats (g)" style="font-size: 11px; padding: 4px 8px; height: auto;" />
+                    </div>
+                    <div style="display:flex; gap:6px; margin-top:4px;">
+                      <button type="button" class="btn btn-primary btn-sm btn-block" ng-click="saveEditDietItem(mealIndex, itemIndex)" style="font-size: 11px; padding: 4px 8px;">💾 Save</button>
+                      <button type="button" class="btn btn-secondary btn-sm" ng-click="cancelEditDietItem()" style="font-size: 11px; padding: 4px 8px;">✕</button>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Add Item Form -->
+            <div ng-if="addingDietIndex === mealIndex" class="plan-edit-box" style="margin-top:10px; padding:10px; background: rgba(255,255,255,0.05); border: 1px dashed var(--border); border-radius: 8px;">
+              <div style="font-size:11px; font-weight:700; margin-bottom:6px; color: var(--accent);">➕ Add New Item</div>
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                <input type="text" class="form-ctrl form-ctrl-sm" ng-model="newDietItemObj.name" placeholder="Item name" required style="font-size: 12px; padding: 4px 8px; height: auto;" />
+                <input type="text" class="form-ctrl form-ctrl-sm" ng-model="newDietItemObj.qty" placeholder="Qty (e.g. 1 bowl)" style="font-size: 12px; padding: 4px 8px; height: auto;" />
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+                  <input type="number" class="form-ctrl form-ctrl-sm" ng-model="newDietItemObj.cal" placeholder="Calories" title="Calories" style="font-size: 11px; padding: 4px 8px; height: auto;" />
+                  <input type="number" class="form-ctrl form-ctrl-sm" ng-model="newDietItemObj.prot" placeholder="Prot" title="Protein (g)" style="font-size: 11px; padding: 4px 8px; height: auto;" />
+                  <input type="number" class="form-ctrl form-ctrl-sm" ng-model="newDietItemObj.carb" placeholder="Carb" title="Carbs (g)" style="font-size: 11px; padding: 4px 8px; height: auto;" />
+                  <input type="number" class="form-ctrl form-ctrl-sm" ng-model="newDietItemObj.fat" placeholder="Fat" title="Fats (g)" style="font-size: 11px; padding: 4px 8px; height: auto;" />
+                </div>
+                <div style="display:flex; gap:6px; margin-top:4px;">
+                  <button type="button" class="btn btn-primary btn-sm btn-block" ng-click="saveAddDietItem(mealIndex)" style="font-size: 11px; padding: 4px 8px;">➕ Add</button>
+                  <button type="button" class="btn btn-secondary btn-sm" ng-click="cancelAddDietItem()" style="font-size: 11px; padding: 4px 8px;">✕</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="divider" style="margin:12px 0 8px"></div>
+            <div style="font-size:11px;color:var(--text-2);display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px">
+              <span>Cal: <strong>{{ meal.totals.cal }} kcal</strong></span>
+              <span>P: <strong>{{ meal.totals.prot }}g</strong></span>
+              <span>C: <strong>{{ meal.totals.carb }}g</strong></span>
+              <span>F: <strong>{{ meal.totals.fat }}g</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;background:rgba(16,185,129,0.05);border:1px solid rgba(16,185,129,0.15);padding:14px;border-radius:10px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;color:#34d399">💡 Plan Summary: Optimized protein-to-carb ratios specifically for {{ bodyMetrics.goalText }}.</span>
+          <span style="font-weight:700;font-size:14px;color:#34d399">Diet Total: {{ generatedDiet.totals.calories }} kcal · P: {{ generatedDiet.totals.protein }}g · C: {{ generatedDiet.totals.carbs }}g · F: {{ generatedDiet.totals.fats }}g</span>
+        </div>
+      </div>
+
+      <!-- Plan: Workout -->
+      <div ng-if="planTab === 'workout'" class="fade-up">
+        <div style="display:grid;grid-template-columns: repeat(5, 1fr);gap:14px">
+          <div ng-repeat="d in generatedWorkout.days" ng-init="dayIndex = $index" style="background:var(--bg-input);padding:14px;border-radius:12px;border:1px solid var(--border)">
+            <div style="font-size:13px;font-weight:700;color:#a78bfa;display:flex;justify-content:space-between;align-items:center">
+              <span>{{ d.day }}</span>
+              <button type="button" class="btn btn-secondary btn-sm" ng-click="startAddWorkoutEx(dayIndex)" style="padding: 2px 4px; font-size: 9px;" title="Add Exercise">➕ Add</button>
+            </div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:2px;font-style:italic">{{ d.focus }}</div>
+            <div class="divider" style="margin:10px 0"></div>
+            
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div ng-repeat="ex in d.exercises" ng-init="exIndex = $index" style="font-size:12px; position:relative; padding-bottom:6px; border-bottom:1px solid rgba(255,255,255,0.05)">
+                
+                <!-- Display Mode -->
+                <div ng-if="editingWorkoutIndex !== dayIndex || editingWorkoutExIndex !== exIndex">
+                  <div style="display:flex; justify-content:space-between; align-items:flex-start">
+                    <div style="font-weight:600;color:var(--text-1); flex: 1; word-break: break-word;">{{ ex.name }}</div>
+                    <div style="display:flex; gap: 2px; margin-left: 6px;">
+                      <button type="button" class="btn btn-sm btn-icon" ng-click="startEditWorkoutEx(dayIndex, exIndex, ex)" style="padding: 2px; font-size: 10px; background: transparent; border: none; color: var(--text-3);" title="Edit exercise">✏️</button>
+                      <button type="button" class="btn btn-sm btn-icon" ng-click="deleteWorkoutEx(dayIndex, exIndex)" style="padding: 2px; font-size: 10px; background: transparent; border: none; color: var(--red);" title="Delete exercise">🗑️</button>
+                    </div>
+                  </div>
+                  <div style="color:var(--text-3);font-size:10px;margin-top:1px">{{ ex.details }}</div>
+                </div>
+
+                <!-- Edit Mode -->
+                <div ng-if="editingWorkoutIndex === dayIndex && editingWorkoutExIndex === exIndex" class="plan-edit-box" style="background: rgba(255,255,255,0.03); padding: 6px; border-radius: 6px; margin-top: 4px;">
+                  <div style="display:flex; flex-direction:column; gap:6px;">
+                    <input type="text" class="form-ctrl form-ctrl-sm" ng-model="editWorkoutExObj.name" placeholder="Exercise name" required style="font-size: 11px; padding: 4px 6px; height: auto;" />
+                    <input type="text" class="form-ctrl form-ctrl-sm" ng-model="editWorkoutExObj.details" placeholder="Details (e.g. 4x10)" style="font-size: 11px; padding: 4px 6px; height: auto;" />
+                    <div style="display:flex; gap:4px; margin-top:2px;">
+                      <button type="button" class="btn btn-primary btn-sm btn-block" ng-click="saveEditWorkoutEx(dayIndex, exIndex)" style="font-size: 10px; padding: 4px 6px;">💾 Save</button>
+                      <button type="button" class="btn btn-secondary btn-sm" ng-click="cancelEditWorkoutEx()" style="font-size: 10px; padding: 4px 6px;">✕</button>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Add Exercise Form -->
+            <div ng-if="addingWorkoutIndex === dayIndex" class="plan-edit-box" style="margin-top:10px; padding:8px; background: rgba(255,255,255,0.05); border: 1px dashed var(--border); border-radius: 6px;">
+              <div style="font-size:10px; font-weight:700; margin-bottom:4px; color: var(--accent);">➕ Add Exercise</div>
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                <input type="text" class="form-ctrl form-ctrl-sm" ng-model="newWorkoutExObj.name" placeholder="Exercise name" required style="font-size: 11px; padding: 4px 6px; height: auto;" />
+                <input type="text" class="form-ctrl form-ctrl-sm" ng-model="newWorkoutExObj.details" placeholder="Details (e.g. 3x12)" style="font-size: 11px; padding: 4px 6px; height: auto;" />
+                <div style="display:flex; gap:4px; margin-top:2px;">
+                  <button type="button" class="btn btn-primary btn-sm btn-block" ng-click="saveAddWorkoutEx(dayIndex)" style="font-size: 10px; padding: 4px 6px;">➕ Add</button>
+                  <button type="button" class="btn btn-secondary btn-sm" ng-click="cancelAddWorkoutEx()" style="font-size: 10px; padding: 4px 6px;">✕</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       TAB: HISTORY & TREND
+  ══════════════════════════════════════════════ -->
+  <div ng-if="tab === 'history'">
+
+    <div class="loader-box" ng-if="loading"><div class="spinner"></div></div>
+
+    <div ng-if="!loading" class="fade-up">
+
+      <!-- Trend chart -->
+      <div class="card mb-6">
+        <div class="card-head">
+          <div class="card-title">📈 BMI Trend Over Time</div>
+          <div class="card-sub">Dashed lines = Normal (18.5) and Overweight (25) thresholds</div>
+        </div>
+
+        <div class="empty-state" ng-if="!history.length">
+          <div class="empty-icon">📈</div>
+          <h3>No history yet</h3>
+          <p>Calculate your BMI to start tracking trends</p>
+        </div>
+
+        <div class="chart-wrap" ng-if="history.length">
+          <canvas id="bmiTrendChart"></canvas>
+        </div>
+      </div>
+
+      <!-- History table -->
+      <div class="card" ng-if="history.length">
+        <div class="card-head">
+          <div class="card-title">📋 All Readings</div>
+          <div class="card-sub">{{ history.length }} records</div>
+        </div>
+
+        <div class="tbl-wrap" ng-if="history.length">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Weight (kg)</th>
+                <th>Height (cm)</th>
+                <th>BMI</th>
+                <th>Category</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="b in history | orderBy:'-date'">
+                <td>{{ b.date | date:'d MMM yyyy' }}</td>
+                <td>{{ b.weight }}</td>
+                <td>{{ b.height }}</td>
+                <td>
+                  <strong ng-style="bmiColorStyle(b.category)">{{ b.bmi }}</strong>
+                </td>
+                <td>
+                  <span ng-class="bmiCatClass(b.category)">{{ b.category }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /page-body -->
